@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { showToast } from './utils.js';
 
-let scene, camera, renderer, model;
+let scene, camera, renderer, model, controls;
 
 // import.meta.url로 상대 경로 해결 → GitHub Pages 하위 경로 대응
 const ASSETS_BASE = new URL('../assets/', import.meta.url).href;
@@ -17,6 +18,8 @@ export async function initARScene() {
 
   // Scene setup
   scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x1a1a1a); // 어두운 회색 배경
+
   camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(0, 1.6, 3);
 
@@ -26,6 +29,15 @@ export async function initARScene() {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.0;
   container.appendChild(renderer.domElement);
+
+  // OrbitControls 추가 (모델 조작 가능)
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+  controls.minDistance = 1;
+  controls.maxDistance = 10;
+  controls.target.set(0, 0, -2);
+  controls.update();
 
   // Lighting
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
@@ -42,6 +54,7 @@ export async function initARScene() {
 
   // Animation loop
   renderer.setAnimationLoop(() => {
+    controls.update(); // OrbitControls 업데이트
     renderer.render(scene, camera);
   });
 
@@ -61,8 +74,8 @@ async function loadHDREnvironment() {
       HDR_PATH,
       (texture) => {
         texture.mapping = THREE.EquirectangularReflectionMapping;
-        scene.environment = texture;
-        scene.background = texture;
+        scene.environment = texture; // 리플렉션과 조명에만 영향
+        // scene.background는 설정하지 않음 (HDR 배경 숨김)
         console.log('HDR loaded:', HDR_PATH);
         resolve();
       },
@@ -104,4 +117,42 @@ async function loadModel() {
       }
     );
   });
+}
+
+// AR 세션 시작 함수
+export async function startARSession() {
+  if (!navigator.xr) {
+    showToast('WebXR을 지원하지 않는 브라우저입니다');
+    console.error('WebXR not supported');
+    return;
+  }
+
+  try {
+    const supported = await navigator.xr.isSessionSupported('immersive-ar');
+    if (!supported) {
+      showToast('AR 모드를 지원하지 않는 기기입니다');
+      console.error('AR not supported on this device');
+      return;
+    }
+
+    // AR 세션 시작
+    const session = await navigator.xr.requestSession('immersive-ar', {
+      requiredFeatures: ['hit-test', 'dom-overlay'],
+      domOverlay: { root: document.body }
+    });
+
+    await renderer.xr.setSession(session);
+    showToast('AR 모드 시작됨');
+    console.log('AR session started');
+
+    // AR 세션이 종료되면 일반 모드로 복귀
+    session.addEventListener('end', () => {
+      showToast('AR 모드 종료됨');
+      console.log('AR session ended');
+    });
+
+  } catch (error) {
+    console.error('AR session failed:', error);
+    showToast('AR 시작 실패 — ' + error.message);
+  }
 }

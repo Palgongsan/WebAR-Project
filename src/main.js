@@ -1,5 +1,5 @@
 // import.meta.url 사용 이유: GitHub Pages 하위 경로 배포 시 절대 경로 '/assets/' 404 방지
-import { initARScene } from './ar.js';
+import { initARScene, startARSession } from './ar.js';
 import { showToast } from './utils.js';
 
 const startButton = document.getElementById('start-ar');
@@ -13,9 +13,9 @@ async function init() {
     loading.style.display = 'none';
     startButton.style.display = 'block';
 
-    startButton.addEventListener('click', () => {
-      // WebXR 세션 시작 로직은 ar.js에서 처리
-      showToast('AR 세션 시작');
+    // AR 세션 시작 버튼 이벤트
+    startButton.addEventListener('click', async () => {
+      await startARSession();
     });
   } catch (error) {
     console.error('Initialization error:', error);
