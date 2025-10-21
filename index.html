@@ -1,1 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가구 AR 배치</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Landing View -->
+    <div id="landing-view" class="view">
+        <div id="preview-container"></div>
+        <div class="controls">
+            <button id="enter-ar-btn" class="primary-btn">AR 체험하기</button>
+        </div>
+    </div>
 
+    <!-- AR View -->
+    <div id="ar-view" class="view hidden">
+        <button id="exit-ar-btn" class="exit-btn">나가기</button>
+
+        <div class="ar-controls">
+            <details class="collapsible-panel">
+                <summary>포즈 변경</summary>
+                <div class="pose-buttons">
+                    <button id="chair-mode-btn" class="pose-btn">의자모드</button>
+                    <button id="stretch-mode-btn" class="pose-btn">눕기모드</button>
+                </div>
+            </details>
+        </div>
+
+        <div id="ar-status" class="status-text">화면을 터치하여 배치하세요</div>
+    </div>
+
+    <!-- Three.js from CDN -->
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
